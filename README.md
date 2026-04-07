@@ -2,86 +2,142 @@
 
 This repository contains Macaulay2 code accompanying the paper on algebraic invariants of lightning self-attention.
 
-The code is organized around two regimes:
+The code is organized around two settings:
 
-- `t > 1`: the **cross-context** case
-- `t = 1`: the **single-context** case
+- the **cross-context case** `t > 1`
+- the **single-context case** `t = 1`
 
-If you are new to the repository, start with one of the two driver scripts:
+In both settings, the intended workflow is the same: **open the appropriate driver file, edit the parameter block near the top, and run that file in Macaulay2**. The remaining `.m2` files are helper files used by the drivers.
 
-- `generateInvariants(t>1).m2`
-- `generateInvariants(t=1).m2`
+## Main files
 
-These are the main entry points. The other `.m2` files implement individual invariant families used by the driver scripts.
+### `generateInvariants(t>1).m2`
 
----
+Main driver for the cross-context case `t > 1`.
 
-## Repository structure
-
-### Main driver scripts
-
-#### `generateInvariants(t>1).m2`
-Driver for the cross-context case `t > 1`.
-
-This script:
+This file:
 - fixes one output coordinate `(i,j)`
 - builds the corresponding lightning self-attention output polynomial
 - constructs the scaled coefficient ring
+- loads the relevant helper files
 - generates the invariant families from the paper
 - optionally compares the generated ideal with the implicit ideal in small examples
 
-Use this file if you want to reproduce or test examples in the cross-context setting.
+This is the file to use for the families coming from:
+- linear relations
+- cross-column cubics
+- low-rank constraints
+- context syzygies
+- Veronese-type quartics
+- quartics from Sylvester resultants
 
-#### `generateInvariants(t=1).m2`
-Driver for the single-context case `t = 1`.
+### `generateInvariants(t=1).m2`
 
-This script generates the one-column invariant families separately, including:
-- low-rank invariants
-- Chow-type Lie flattening invariants
+Main driver for the single-context case `t = 1`.
 
-The `t=1` case is handled separately because the relevant invariant families differ from the `t>1` case.
+This file:
+- builds the one-column output cubic
+- constructs the scaled coefficient ring
+- generates the low-rank and Chow-type families separately
+- optionally compares them with the implicit ideal in small examples
 
----
+This is the file to use when working with the single-context invariants.
 
-## Helper files for the cross-context case (`t > 1`)
+## How to use the repository
 
-#### `linearRelations.m2`
-Generates the linear relations among the scaled coefficient coordinates.
+### Cross-context case: `t > 1`
 
-#### `crossColumnCubics.m2`
-Generates the cubic cross-column relations.
+Open `generateInvariants(t>1).m2` and edit the parameter block near the top. For example:
 
-#### `lowRankA.m2`
-Generates invariants coming from the low-rank condition on the attention matrix.
+    targetRow = 1;
+    targetCol = 1;
 
-#### `contextSyzygies.m2`
-Generates the quartic context-syzygy invariants.
+    d = 3;
+    at = 3;
+    t = 2;
+    d' = 1;
 
-#### `veroneseInvariants.m2`
-Generates the Veronese-type invariants from the paper, including:
-- the basic catalecticant relations
-- the cross-target relations
-- the stronger block version
+Then run the file in Macaulay2.
 
-#### `quarticResultants.m2`
-Generates quartic invariants from Sylvester resultants of restricted slice quadrics.
+The file will generate the invariant families for the chosen output coordinate and, in small examples, can compare the generated ideal with the elimination ideal.
 
----
+### Single-context case: `t = 1`
 
-## Helper file for the single-context case (`t = 1`)
+Open `generateInvariants(t=1).m2` and edit the parameter block near the top. For example:
 
-#### `singleContextInvariants.m2`
-Generates the one-column invariant families used in the `t=1` case, including:
-- low-rank minors
-- Chow-type Lie flattening minors for the split `(2,1)` locus
+    d = 3;
+    at = 3;
+    t = 1;
+    d' = 1;
+    targetRow = 1;
 
----
+Then run the file in Macaulay2.
 
-## Quick start
+This file generates the `t=1` invariant families separately, so the low-rank part can be tested without waiting for the Chow-type computations.
 
-## 1. Cross-context case: `t > 1`
+## Helper files
 
-Open Macaulay2 and run
+The helper files implement individual invariant families.
 
-```m2
-load "generateInvariants(t>1).m2";
+### Cross-context helper files
+
+- `linearRelations.m2` — linear relations among the scaled coefficient coordinates
+- `crossColumnCubics.m2` — cubic cross-column relations
+- `lowRankA.m2` — invariants coming from the rank bound on the attention matrix
+- `contextSyzygies.m2` — quartic context-syzygy invariants
+- `veroneseInvariants.m2` — Veronese-type invariants
+- `quarticResultants.m2` — quartic invariants from Sylvester resultants of restricted slice quadrics
+
+### Single-context helper file
+
+- `singleContextInvariants.m2` — low-rank and Chow-type one-column invariants for the `t=1` case
+
+In normal use, these helper files do not need to be opened directly. They are loaded by the driver files.
+
+## What to expect when running the drivers
+
+The driver files typically:
+- print Betti tables for the individual invariant families
+- build the combined ideal generated by those families
+- optionally compare that ideal with the implicit ideal obtained by elimination
+
+Typical checks in the driver files include:
+
+    isSubset(myJ, sub(J, L))
+    myJ == sub(J, L)
+
+or, in the `t=1` case,
+
+    isSubset(lowRank, sub(J, L))
+    isSubset(chow21, sub(J, L))
+    allI == sub(J, L)
+
+These comparisons are intended for small examples. Elimination becomes expensive very quickly.
+
+## Notes
+
+- The scripts are written for the case `d' = 1`.
+- The elimination blocks are optional verification steps and are only practical in small examples.
+- In the cross-context case, the resultant quartic computations use a user-supplied finite list of lines. The general theorem applies to every line, but the computation evaluates the construction on a finite chosen collection of lines to obtain explicit quartic generators.
+- The `t=1` case is handled separately because the relevant invariant families differ from the `t>1` case.
+
+## File summary
+
+| File | Purpose |
+|---|---|
+| `generateInvariants(t>1).m2` | main driver for the cross-context case |
+| `generateInvariants(t=1).m2` | main driver for the single-context case |
+| `linearRelations.m2` | linear invariants |
+| `crossColumnCubics.m2` | cubic cross-column invariants |
+| `lowRankA.m2` | low-rank invariants from the attention matrix |
+| `contextSyzygies.m2` | quartic context-syzygy invariants |
+| `veroneseInvariants.m2` | Veronese-type invariants |
+| `quarticResultants.m2` | quartics from Sylvester resultants |
+| `singleContextInvariants.m2` | low-rank and Chow-type invariants for `t=1` |
+
+## Minimal guidance
+
+- If you want the **cross-context case**, open and run `generateInvariants(t>1).m2`.
+- If you want the **single-context case**, open and run `generateInvariants(t=1).m2`.
+- Edit the parameter block at the top of the chosen driver file before running it.
+- The helper files are implementation files for the individual invariant families.

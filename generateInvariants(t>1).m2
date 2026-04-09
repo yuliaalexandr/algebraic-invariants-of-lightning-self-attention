@@ -112,7 +112,7 @@ cubicRels = ideal makeCrossColumnCubics(L, d, t, targetCol);
 betti mingens cubicRels
 
 ------------------------------------------------------------
--- Context-syzygy relations
+-- Cross-column syzygy relations
 ------------------------------------------------------------
 
 load "contextSyzygies.m2";
